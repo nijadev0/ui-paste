@@ -481,10 +481,13 @@ const methods = {
       }
 
       const productCode = $(this).attr("uipaste-product-code");
-      states.forCopy = await methods.getFigmaClipboard(productCode);
-      if (states.forCopy) {
-        states.forCopyFormat = "text/html";
-        document.execCommand("copy");
+
+      if (productCode) {
+        states.forCopy = await methods.getFigmaClipboard(productCode);
+        if (states.forCopy) {
+          states.forCopyFormat = "text/html";
+          document.execCommand("copy");
+        }
       }
     });
 
@@ -497,10 +500,13 @@ const methods = {
         }
 
         const productCode = $(this).attr("uipaste-product-code");
-        states.forCopy = await methods.getWebflowClipboard(productCode);
-        if (states.forCopy) {
-          states.forCopyFormat = "application/json";
-          document.execCommand("copy");
+
+        if (productCode) {
+          states.forCopy = await methods.getWebflowClipboard(productCode);
+          if (states.forCopy) {
+            states.forCopyFormat = "application/json";
+            document.execCommand("copy");
+          }
         }
       }
     );
@@ -514,10 +520,13 @@ const methods = {
         }
 
         const productCode = $(this).attr("uipaste-product-code");
-        states.forCopy = await methods.getFramerClipboard(productCode);
-        if (states.forCopy) {
-          states.forCopyFormat = "text/html";
-          document.execCommand("copy");
+
+        if (productCode) {
+          states.forCopy = await methods.getFramerClipboard(productCode);
+          if (states.forCopy) {
+            states.forCopyFormat = "text/html";
+            document.execCommand("copy");
+          }
         }
       }
     );
