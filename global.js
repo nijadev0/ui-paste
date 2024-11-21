@@ -23,7 +23,7 @@ const methods = {
       $("[uipaste-action='unsubscribed-only']").hide();
     } else {
       $("[uipaste-action='subcribed-only']").hide();
-      $("[uipaste-action='unsubsribed-only']").show();
+      $("[uipaste-action='unsubscribed-only']").show();
     }
   },
   async checkAndSetAuthUser() {
