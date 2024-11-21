@@ -565,6 +565,9 @@ const methods = {
             "Content-Type": "application/json",
             Authorization: "Bearer " + token
           },
+          body: JSON.stringify({
+            redirectUrl: 'https://uipaste.com/your-plan'
+          })
         })
           .then((response) => {
             if (response.ok) {
