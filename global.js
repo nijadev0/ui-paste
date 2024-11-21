@@ -536,6 +536,77 @@ const methods = {
       evt.preventDefault();
     });
   },
+  addListenerToSubscribeButtons() {
+    $(document).on("click", "[uipaste-action='subscribe']", async function () {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        console.error("token not found");
+        return null;
+      }
+
+      const lmsVariantId = $(this).attr("uipaste-lms-variant-id");
+
+      if (lmsVariantId) {
+        methods.setLoading(true);
+        fetch(`https://ui-paste-api.vercel.app/lmsqueezy/variants/${lmsVariantId}/subscribe`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token
+          },
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+            return Promise.reject(response);
+          })
+          .then((data) => {
+            const paymentUrl = data.data.url;
+            window.location = paymentUrl;
+          })
+          .catch((error) => {
+            if (error instanceof Response) {
+              error
+                .json()
+                .then((jsonError) => {
+                  console.error("Error from API");
+                  console.error(jsonError);
+                  if ((error.status >= 400) & (error.status < 500)) {
+                    methods.showErrorMessage(
+                      "Failed to create a subscription payment link",
+                      jsonError.data.error
+                    );
+                  } else {
+                    methods.showErrorMessage(
+                      "Failed to create a subscription payment link",
+                      "Some mistake from our side"
+                    );
+                  }
+                })
+                .catch((genericError) => {
+                  console.error("Generic error from API");
+                  console.error(error.statusText);
+                  methods.showErrorMessage(
+                    "Failed to create a subscription payment link",
+                    "Some mistake from our side"
+                  );
+                });
+            } else {
+              console.log("Fetch error");
+              console.log(error);
+              methods.showErrorMessage(
+                "Failed to create a subscription payment link",
+                "Some mistake from our side"
+              );
+            }
+          })
+          .finally(() => {
+            methods.setLoading(false);
+          });
+      }
+    });
+  }
 };
 const onMounted = () => {
   methods.checkAndSetAuthUser();
@@ -545,5 +616,6 @@ const onMounted = () => {
   methods.handleForgotPasswordSubmit();
   methods.handleUpdatePasswordSubmit();
   methods.addListenerToCopyButtons();
+  methods.addListenerToSubscribeButtons();
 };
 onMounted();
