@@ -18,6 +18,7 @@ const methods = {
     }
   },
   async handleAllSubscriptionDependentViews(isSubscribed) {
+    console.log(isSubscribed);
     if (isSubscribed) {
       $("[uipaste-action='subscribed-only']").show();
       $("[uipaste-action='unsubscribed-only']").hide();
