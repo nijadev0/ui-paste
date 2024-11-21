@@ -17,6 +17,15 @@ const methods = {
       $("[uipaste-action='guest-only']").show();
     }
   },
+  async handleAllSubscriptionDependentViews(isSubscribed) {
+    if (isSubscribed) {
+      $("[uipaste-action='subscribed-only']").show();
+      $("[uipaste-action='unsubscribed-only']").hide();
+    } else {
+      $("[uipaste-action='subcribed-only']").hide();
+      $("[uipaste-action='unsubsribed-only']").show();
+    }
+  },
   async checkAndSetAuthUser() {
     const token = localStorage.getItem("access_token");
     if (!token) {
@@ -40,12 +49,14 @@ const methods = {
       .then((data) => {
         states.authUser = data.data.user;
         methods.handleAllAuthDependentViews(true);
+        methods.handleAllSubscriptionDependentViews(states.authUser.isSubscribed);
         return;
       })
       .catch((error) => {
         states.authUser = null;
         localStorage.removeItem("access_token");
         methods.handleAllAuthDependentViews(false);
+        methods.handleAllSubscriptionDependentViews(false);
         return;
       });
   },
