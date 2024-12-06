@@ -311,7 +311,7 @@ document.addEventListener('alpine:init', () => {
                     this.isLoading = false;
                 });
         },
-        updateProfile(name) {
+        updateProfile(name, avatarUrl) {
             this.isLoading = true
             fetch("https://ui-paste-api.vercel.app/profile", {
                 method: "PATCH",
@@ -319,7 +319,8 @@ document.addEventListener('alpine:init', () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    fullName: name
+                    fullName: name,
+                    avatarUrl
                 }),
                 credentials: "include"
             })
@@ -371,7 +372,128 @@ document.addEventListener('alpine:init', () => {
                         console.log(error);
                         this.notifications.push({
                             type: 'error',
-                            title: "Failed to create a subscription payment link",
+                            title: "Failed to update the profile",
+                            description: "Some mistake from our side"
+                        });
+                    }
+                })
+                .finally(() => {
+                    this.isLoading = false
+                });
+        },
+        async uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                console.error("No file selected.");
+                return;
+            }
+
+            // Prepare the form data for the API request
+            const formData = new FormData();
+            formData.append("avatar", file);
+
+            try {
+                this.isLoading = true;
+                const response = await fetch("https://ui-paste-api.vercel.app/file/avatar", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include"
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    return result.data.url;
+                } else {
+                    console.error("Error uploading avatar:", result.data.error);
+                    this.notifications.push({
+                        type: 'error',
+                        title: "Failed to upload avatar",
+                        description: result.data.error
+                    });
+                }
+            } catch (error) {
+                console.error("Unexpected error occurred:", error);
+                this.notifications.push({
+                    type: 'error',
+                    title: "Failed to upload avatar",
+                    description: "Some mistake from our side"
+                });
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        updatePassword(currentPassword, newPassword, newPasswordConfirmation) {
+            if (newPassword !== newPasswordConfirmation) {
+                this.notifications.push({
+                    type: 'error',
+                    title: "Failed to update the password",
+                    description: "Password confirmation does not match"
+                });
+                return;
+            }
+
+            this.isLoading = true
+            fetch("https://ui-paste-api.vercel.app/profile/password", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    password: currentPassword,
+                    newPassword
+                }),
+                credentials: "include"
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    return Promise.reject(response);
+                })
+                .then((data) => {
+                    this.notifications.push({
+                        type: 'success',
+                        title: "Password updated successfully",
+                        description: "Your password has been updated"
+                    });
+                })
+                .catch((error) => {
+                    if (error instanceof Response) {
+                        error
+                            .json()
+                            .then((jsonError) => {
+                                console.error("Error from API");
+                                console.error(jsonError);
+                                if ((error.status >= 400) & (error.status < 500)) {
+                                    this.notifications.push({
+                                        type: 'error',
+                                        title: "Failed to update the password",
+                                        description: jsonError.data.error
+                                    });
+                                } else {
+                                    this.notifications.push({
+                                        type: 'error',
+                                        title: "Failed to update the password",
+                                        description: "Some mistake from our side"
+                                    });
+                                }
+                            })
+                            .catch((genericError) => {
+                                console.error("Generic error from API");
+                                console.error(error.statusText);
+                                this.notifications.push({
+                                    type: 'error',
+                                    title: "Failed to update the password",
+                                    description: "Some mistake from our side"
+                                });
+                            });
+                    } else {
+                        console.log("Fetch error");
+                        console.log(error);
+                        this.notifications.push({
+                            type: 'error',
+                            title: "Failed to update the password",
                             description: "Some mistake from our side"
                         });
                     }
