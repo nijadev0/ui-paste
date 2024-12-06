@@ -17,19 +17,12 @@ document.addEventListener('alpine:init', () => {
             });
         },
         checkAndSetAuthUser() {
-            const token = localStorage.getItem("access_token");
-            if (!token) {
-                this.authUser = null;
-                localStorage.removeItem("access_token");
-                return;
-            }
-
             this.isLoading = true;
             return fetch("https://ui-paste-api.vercel.app/profile", {
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
+                credentials: "include"
             })
                 .then((response) => {
                     if (response.ok) {
@@ -43,7 +36,6 @@ document.addEventListener('alpine:init', () => {
                 })
                 .catch((error) => {
                     this.authUser = null;
-                    localStorage.removeItem("access_token");
                     return;
                 })
                 .finally(() => {
@@ -62,6 +54,7 @@ document.addEventListener('alpine:init', () => {
                     email,
                     password
                 }),
+                credentials: "include"
             })
                 .then((response) => {
                     if (response.ok) {
@@ -132,6 +125,7 @@ document.addEventListener('alpine:init', () => {
                     email,
                     password
                 }),
+                credentials: "include"
             })
                 .then((response) => {
                     if (response.ok) {
@@ -140,7 +134,6 @@ document.addEventListener('alpine:init', () => {
                     return Promise.reject(response);
                 })
                 .then((data) => {
-                    localStorage.setItem('access_token', data.data.token);
                     window.location.href = "/";
                 })
                 .catch((error) => {
@@ -189,6 +182,7 @@ document.addEventListener('alpine:init', () => {
                 body: JSON.stringify({
                     email
                 }),
+                credentials: "include"
             })
                 .then((response) => {
                     if (response.ok) {
@@ -266,6 +260,7 @@ document.addEventListener('alpine:init', () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(Object.fromEntries(formData)),
+                credentials: "include"
             })
                 .then((response) => {
                     if (response.ok) {
@@ -316,21 +311,81 @@ document.addEventListener('alpine:init', () => {
                     this.isLoading = false;
                 });
         },
+        updateProfile(name) {
+            this.isLoading = true
+            fetch("https://ui-paste-api.vercel.app/profile", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    fullName: name
+                }),
+                credentials: "include"
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    return Promise.reject(response);
+                })
+                .then((data) => {
+                    this.notifications.push({
+                        type: 'success',
+                        title: "Profile updated successfully",
+                        description: "Your profile has been updated"
+                    });
+                })
+                .catch((error) => {
+                    if (error instanceof Response) {
+                        error
+                            .json()
+                            .then((jsonError) => {
+                                console.error("Error from API");
+                                console.error(jsonError);
+                                if ((error.status >= 400) & (error.status < 500)) {
+                                    this.notifications.push({
+                                        type: 'error',
+                                        title: "Failed to update the profile",
+                                        description: jsonError.data.error
+                                    });
+                                } else {
+                                    this.notifications.push({
+                                        type: 'error',
+                                        title: "Failed to update the profile",
+                                        description: "Some mistake from our side"
+                                    });
+                                }
+                            })
+                            .catch((genericError) => {
+                                console.error("Generic error from API");
+                                console.error(error.statusText);
+                                this.notifications.push({
+                                    type: 'error',
+                                    title: "Failed to update the profile",
+                                    description: "Some mistake from our side"
+                                });
+                            });
+                    } else {
+                        console.log("Fetch error");
+                        console.log(error);
+                        this.notifications.push({
+                            type: 'error',
+                            title: "Failed to create a subscription payment link",
+                            description: "Some mistake from our side"
+                        });
+                    }
+                })
+                .finally(() => {
+                    this.isLoading = false
+                });
+        },
         async getProductClipboard(platform, productCode) {
             try {
-                this.isLoading = true
-                const token = localStorage.getItem("access_token");
-                if (!token) {
-                    console.error("token not found");
-                    return null;
-                }
-
-                const res = await fetch(
-                    `https://ui-paste-api.vercel.app/clipboards/${platform}/${productCode}`,
-                    {
-                        headers: { Authorization: "Bearer " + token },
-                    }
-                );
+                this.isLoading = true;
+                const res = await fetch(`https://ui-paste-api.vercel.app/clipboards/${platform}/${productCode}`, {
+                    credentials: "include"
+                });
                 const json = await res.json();
                 return json.data;
             } catch (error) {
@@ -403,23 +458,17 @@ document.addEventListener('alpine:init', () => {
             }
         },
         getAndRedirectToSubscriptionPayment(lmsVariantId, redirectUrl) {
-            const token = localStorage.getItem("access_token");
-            if (!token) {
-                console.error("token not found");
-                return null;
-            }
-
             if (lmsVariantId) {
                 this.isLoading = true;
                 fetch(`https://ui-paste-api.vercel.app/subscription/lmsqueezy/variants/${lmsVariantId}/subscribe`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: "Bearer " + token
                     },
                     body: JSON.stringify({
                         redirectUrl
-                    })
+                    }),
+                    credentials: "include"
                 })
                     .then((response) => {
                         if (response.ok) {
