@@ -35,6 +35,15 @@ const productsPage = {
           .filter((item) => !!item) || []
       );
     },
+    getSelectedLicenses() {
+      const selectedTypes = productsPage.states.queryParams.get("license");
+      return (
+        selectedTypes
+          ?.split(",")
+          .map((item) => item.toLowerCase())
+          .filter((item) => !!item) || []
+      );
+    },
     implementFilter() {
       const search = productsPage.states.queryParams.get("search");
       const selectedTools = productsPage.methods.getSelectedTools();
@@ -116,6 +125,18 @@ const productsPage = {
           $(this).removeClass("button-filter-active");
         }
       });
+      $("[uipaste-search-field=license]").each(function () {
+        const selectedLicenses = productsPage.methods.getSelectedLicenses();
+        if (
+          selectedLicenses.includes(
+            $(this).attr("uipaste-search-value").toLowerCase()
+          )
+        ) {
+          $(this).addClass("button-filter-active");
+        } else {
+          $(this).removeClass("button-filter-active");
+        }
+      });
     },
     addListenerToFilterButtons() {
       $("[uipaste-search-field=tools]").click(function () {
@@ -145,6 +166,21 @@ const productsPage = {
         } else {
           const newSelectedTypes = selectedTypes.concat([clickingTool]);
           url.searchParams.set("types", newSelectedTypes.join(","));
+        }
+        window.location.href = url;
+      });
+      $("[uipaste-search-field=license]").click(function () {
+        const url = new URL(document.location);
+        const selectedLicenses = productsPage.methods.getSelectedLicenses();
+        const clickingTool = $(this).attr("uipaste-search-value").toLowerCase();
+        if (selectedLicenses.includes(clickingTool)) {
+          const newSelectedLicenses = selectedLicenses.filter(
+            (item) => item != clickingTool
+          );
+          url.searchParams.set("license", newSelectedLicenses.join(","));
+        } else {
+          const newSelectedLicenses = selectedLicenses.concat([clickingTool]);
+          url.searchParams.set("license", newSelectedLicenses.join(","));
         }
         window.location.href = url;
       });
