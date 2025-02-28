@@ -7,6 +7,8 @@ document.addEventListener("alpine:init", () => {
     forCopyFormat: null,
 
     init() {
+      this.removeCloakClass();
+      this.getCachedAuthUser();
       this.checkAndSetAuthUser();
 
       const forCopy = this.forCopy;
@@ -16,8 +18,18 @@ document.addEventListener("alpine:init", () => {
         evt.preventDefault();
       });
     },
+    removeCloakClass() {
+      document.querySelectorAll(".cloak").forEach((el) => {
+        el.classList.remove("cloak");
+      });
+    },
+    getCachedAuthUser() {
+      const authUser = localStorage.getItem("authUser");
+      if (authUser) {
+        this.authUser = JSON.parse(authUser);
+      }
+    },
     checkAndSetAuthUser() {
-      this.isLoading = true;
       return fetch("https://ui-paste-api.vercel.app/profile", {
         headers: {
           "Content-Type": "application/json",
@@ -32,14 +44,15 @@ document.addEventListener("alpine:init", () => {
         })
         .then((data) => {
           this.authUser = data.data.user;
+          localStorage.setItem("authUser", JSON.stringify(this.authUser));
           return;
         })
         .catch((error) => {
-          this.authUser = null;
+          if ([400, 401].includes(error.status)) {
+            this.authUser = null;
+            localStorage.removeItem("authUser");
+          }
           return;
-        })
-        .finally(() => {
-          this.isLoading = false;
         });
     },
     register(fullName, email, password, redirectTo = "/login") {
